@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>直播帧数据展示</title>
+</head>
+<body>
+    <h2>最新直播帧</h2>
+    <ul id="frame-list">
+        {% for row in frames %}
+            <li>[{{ row.0.1 }}] HEX: {{ row.2.1 }}</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        const socket = new WebSocket("ws://" + window.location.host + "/ws/frames/");
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const li = document.createElement("li");
+            li.innerText = `[${data.tid}] HEX: ${data.hex}`;
+            document.getElementById("frame-list").prepend(li);
+        };
+    </script>
+</body>
+</html>
