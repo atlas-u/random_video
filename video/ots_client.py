@@ -1,5 +1,7 @@
+import os
 import time
 from tkinter.constants import INSERT
+from dotenv import load_dotenv
 
 from tablestore import (
     OTSClient, Row, TableMeta, TableOptions,
@@ -8,14 +10,18 @@ from tablestore import (
     TimeseriesTableMeta, TimeseriesKey, TimeseriesRow, GetTimeseriesDataRequest
 )
 
+load_dotenv()
 
 # 阿里云配置
-access_key_id = "***"
-access_key_secret = "***"
-endpoint = "https://***"
+access_key_id = os.getenv("ACCESS_KEY_ID")
+access_key_secret = os.getenv("ACCESS_KEY_SECRET")
+endpoint = os.getenv("ENDPOINT")
+instance_name = os.getenv("INSTANCE_NAME")
+table_name = os.getenv("TABLE_NAME")
 
-instance_name = "t01w1pc2nz0p"
-table_name = "live_data"
+# 打印测试
+print("access_key_id:", access_key_id)
+print("endpoint:", endpoint)
 
 # 创建客户端
 client = OTSClient(endpoint, access_key_id, access_key_secret, instance_name)
