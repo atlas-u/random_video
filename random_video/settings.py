@@ -87,7 +87,7 @@ TEMPLATES = [
 ]
 
 
-WSGI_APPLICATION = 'random_video.wsgi.application'
+ASGI_APPLICATION = 'random_video.asgi.application'
 
 
 # Database

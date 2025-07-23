@@ -3,11 +3,16 @@ import json
 
 class FrameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.channel_layer.group_add("frames", self.channel_name)
         await self.accept()
+        await self.send(text_data=json.dumps({
+            "message": "WebSocket 连接成功！"
+        }))
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("frames", self.channel_name)
+        pass
 
-    async def new_frame(self, event):
-        await self.send(text_data=json.dumps(event["data"]))
+    async def receive(self, text_data):
+        # 处理前端发来的数据
+        await self.send(text_data=json.dumps({
+            "message": f"收到: {text_data}"
+        }))

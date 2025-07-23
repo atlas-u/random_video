@@ -131,6 +131,8 @@ def get_latest_frames(tags,measure_name = "frame_measure", datasource = "video_s
     request.limit = limit
     request.fieldsToGet = {}  # 留空表示取所有字段
 
+    request.backward = True
+
     try:
         response = client.get_timeseries_data(request)
         return format_timeseries_rows(response.rows)  # 已是结构化的 Point 数据

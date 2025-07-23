@@ -12,14 +12,29 @@
     </ul>
 
     <script>
-        const socket = new WebSocket("ws://" + window.location.host + "/ws/frames/");
+    const eventSource = new EventSource("/sse/frames/");
 
-        socket.onmessage = function(event) {
+    eventSource.onmessage = function(event) {
+        console.log("收到消息:", event.data);
+
+        try {
             const data = JSON.parse(event.data);
-            const li = document.createElement("li");
-            li.innerText = `[${data.tid}] HEX: ${data.hex}`;
-            document.getElementById("frame-list").prepend(li);
-        };
-    </script>
+            const frameList = document.getElementById("frame-list");
+            frameList.innerHTML = ""; // 清空旧内容
+
+            data.forEach(row => {
+                const li = document.createElement("li");
+                li.textContent = `[${row.tid}] HEX: ${row.hex} RAND: ${row.rand}`;
+                frameList.appendChild(li);
+            });
+        } catch (e) {
+            console.error("解析数据失败", e);
+        }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error("SSE 连接错误", err);
+    };
+</script>
 </body>
 </html>

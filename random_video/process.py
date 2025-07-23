@@ -156,19 +156,6 @@ def subMsg(msg):
         print("message:", msg[2])
         updateChannel(msg[2].decode())
 
-def send_ws(data):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    channel_layer = get_channel_layer()
-    loop.run_until_complete(channel_layer.group_send(
-        "frames",
-        {
-            "type": "new_frame",
-            "data": data
-        }
-    ))
-    loop.close()
-
 def redis_subscriber():
     pub = redis_client.pubsub()
     pub.subscribe("channel:update")
@@ -201,7 +188,6 @@ def upload_data():
             url = data["url"]
             stid = data["stid"]
             merge = tid.to_bytes(6, 'big') + hash_bytes
-
             mhex = merge.hex()
             b64 = str(base64.b64encode(merge), 'utf-8')
             rand = prng_with_seed(mhex)
@@ -224,8 +210,6 @@ def upload_data():
             print(f"[DATA] tid={tid_str} hex={mhex}")
             print(f"[DATA] img size: {len(img)} bytes")
             put_frame_data(putdata)
-            send_ws(putdata)
-
 
 frame_cache = dict()
 frame_data = dict()
