@@ -7,7 +7,7 @@
     <h2>最新直播帧</h2>
     <ul id="frame-list">
         {% for row in frames %}
-            <li>[{{ row.0.1 }}] HEX: {{ row.2.1 }}</li>
+            <li>[{{ row.tid }}] HEX: {{ row.hex }} RAND: {{ row.rand }}</li>
         {% endfor %}
     </ul>
 

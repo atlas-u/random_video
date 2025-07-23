@@ -2,6 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import threading
 
 from random_video.process import random_main
 
@@ -22,5 +23,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    random_main()
 
