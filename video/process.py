@@ -8,6 +8,9 @@ import numpy as np
 import redis
 import math
 import time
+from gevent import spawn, sleep
+
+
 import threading
 import multiprocessing as mp
 import os
@@ -77,7 +80,7 @@ class CapWork(mp.Process):
             if now.second != latest:
                 latest = now.second
                 self.getData(cap)
-            time.sleep(frame_time)
+            sleep(frame_time)
 
     def getData(self, cap):
         try:
@@ -330,14 +333,17 @@ def frameHanld(tid, isFull):
 
 
 def random_main():
+    print("开始运行 process")
     # init_channel_url()
-    threading.Thread(target=redis_subscriber).start()
-    threading.Thread(target=upload_data).start()
+    spawn(redis_subscriber)
+    spawn(upload_data)
+    # threading.Thread(target=redis_subscriber).start()
+    # threading.Thread(target=upload_data).start()
 
     ordered_frame_buffer = {"c1": None, "c2": None, "c3": None, "c4": None}
     latest_tid = 0
     while True:
-
+        print("---")
         # 热切换通道
         # 找到 ordered_frame_buffer 中第一个为 None 的通道位置
         for ch in ordered_frame_buffer:
