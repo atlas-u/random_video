@@ -1,7 +1,5 @@
 from django.apps import AppConfig
-from random_video.process import random_main
-import os
-import threading
+
 
 class VideoConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
