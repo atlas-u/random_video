@@ -11,12 +11,9 @@ import time
 from gevent import spawn, sleep
 
 
-import threading
 import multiprocessing as mp
 import os
-import signal
-import json
-from snowflake import Snowflake, SnowflakeGenerator
+# from snowflake import Snowflake, SnowflakeGenerator
 
 from video.ots_client import put_frame_data
 
@@ -30,8 +27,8 @@ access_key_secret = os.getenv("ACCESS_KEY_SECRET")
 oss_endpoint = os.getenv("OSS_ENDPOINT")
 bucket_name = 'live-video-img'
 
-sf = Snowflake.parse(856165981072306191, 1288834974657)
-gen = SnowflakeGenerator.from_snowflake(sf)
+# sf = Snowflake.parse(856165981072306191, 1288834974657)
+# gen = SnowflakeGenerator.from_snowflake(sf)
 
 redis_client = redis.Redis(
     host=db_host,
@@ -60,11 +57,11 @@ class CapWork(mp.Process):
 
         mapped_quality = self.quality
         if mapped_quality not in streams:
-            print(f"清晰度映射失败或不存在 {mapped_quality}，尝试其他清晰度")
+            # print(f"清晰度映射失败或不存在 {mapped_quality}，尝试其他清晰度")
             for fallback in ["al_2000k", "md", "origin", "best"]:
                 if fallback in streams:
                     mapped_quality = fallback
-                    print(f"使用备用清晰度 {mapped_quality}")
+                    # print(f"使用备用清晰度 {mapped_quality}")
                     break
             else:
                 print("没有合适的清晰度，无法播放")
@@ -143,35 +140,23 @@ change_channel = list()
 channel_worker = None  # 通道名 => CapWork 实例
 
 
-# def updateChannel(channelName):
-#     url = "https://live.douyin.com/870887192950?activity_name=&anchor_id=96582746791&banner_type=recommend&category_name=all&page_type=live_main_page"
-#     print("updateChannel:", url)
-#     if channelName in change_channel:
-#         return
-#     elif channelName in channel_url and channel_url[channelName] != url:
-#         change_channel[channelName] = url
-#     else:
-#         channel_url[channelName] = url
-#     work = CapWork(que, url, channelName, quality)
-#     work.start()
-
-
 def updateChannel(channelName):
     global channel_worker
-    # channel = redis_client.hgetall('channel:config:' + channelName)
+    # channel = redis_client.get('channel:config:' + channelName)
     # url = channel[b'url'].decode()
     URL_MAP = {
         "c1": "https://live.douyin.com/547977714661?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231620366A568B5E4A07237687BA&search_result_id=7529148369990585634",
         "c2": "https://live.douyin.com/870887192950?activity_name=&anchor_id=96582746791&banner_type=recommend&category_name=all&page_type=live_main_page",
-        "c3": "https://live.douyin.com/208823316033?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231620366A568B5E4A07237687BA&search_result_id=7530163251414420788",
-        "c4": "https://live.douyin.com/50828500437?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231623136FB949EDB12216E7C9E9&search_result_id=7530102166388870438"
+        "c3": "https://live.douyin.com/296728101980?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507241440238DF4EF59502A1634E9E2&search_result_id=7529680026967575835",
+        "c4": "https://live.douyin.com/296728101980?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507241440238DF4EF59502A1634E9E2&search_result_id=7529680026967575835"
     }
     url = URL_MAP[channelName]
-    print("updateChannel:", url)
+
+    # url = channel.decode('utf-8')
+
     if channelName in change_channel:
         return
     elif channelName in channel_url and channel_url[channelName] != url:
-
         change_channel[channelName] = url
     else:
         channel_url[channelName] = url
@@ -179,7 +164,7 @@ def updateChannel(channelName):
     if channel_worker is not None:
         old_work = channel_worker
         if old_work.is_alive():
-            print(f"正在停止通道 {channelName} 的旧线程")
+            # print(f"正在停止通道 {channelName} 的旧线程")
             old_work.terminate()  # 正确终止进程
             old_work.join(timeout=2)  # 等待最多 2 秒退出
 
@@ -188,48 +173,17 @@ def updateChannel(channelName):
     new_work.start()
     channel_worker = new_work
 
-# def init_channel_url():
-#     URL_MAP = {
-#         "c1": "https://live.douyin.com/547977714661?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231620366A568B5E4A07237687BA&search_result_id=7529148369990585634",
-#         "c2": "https://live.douyin.com/870887192950?activity_name=&anchor_id=96582746791&banner_type=recommend&category_name=all&page_type=live_main_page",
-#         "c3": "https://live.douyin.com/208823316033?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231620366A568B5E4A07237687BA&search_result_id=7530163251414420788",
-#         "c4": "https://live.douyin.com/50828500437?column_type=single&from_search=true&is_aweme_tied=0&search_id=202507231623136FB949EDB12216E7C9E9&search_result_id=7530102166388870438"
-#     }
-#     global channel_url
-#     channel_url = URL_MAP.copy()
-#     global change_channel
-#     change_channel = ["c1", "c2", "c3","c4"]
-
-def subMsg(msg):
-    if msg[0] == b'subscribe':
-        print("订阅成功", msg[1])
-    elif msg[0] == b'message':
-        print("message:", msg[2])
-        updateChannel(msg[2].decode())
-
-def redis_subscriber():
-    pub = redis_client.pubsub()
-    pub.subscribe("channel:update")
-    while True:
-        msg = pub.parse_response()
-        subMsg(msg)
-
-
 def upload_data():
-    while True:
-        data = upload_que.get()
-        tid = data["tid"]
-        tid_str = str(tid)
-
-        if 'type' in data and data["type"] == 'frame':
-            del data["type"]
-            jsonStr = json.dumps(data)
-            print(f"[FRAME] tid={tid_str} json={jsonStr}")
-            print(f"[FRAME] tid={tid_str} hex={data['hex']}")
-            rand = prng_with_seed(data['hex'])
-            data["rand"] = rand
-            data["time"] = time.time_ns() // 1_000_000
-            put_frame_data(data)
+    # while True:
+    data = upload_que.get()
+    if 'type' in data and data["type"] == 'frame':
+        del data["type"]
+        rand = prng_with_seed(data['hex'])
+        data["rand"] = rand
+        # data["id"] = str(next(gen))
+        data["time"] = str(time.time_ns() // 1_000_000)
+        print("want upload data === ",data)
+        put_frame_data(data)
 
 
 frame_cache = dict()
@@ -319,14 +273,10 @@ def frameHanld(tid, isFull):
         "img4": c4["img"],
         "time": time.time(),
         "rand": 0,
+        # "id": "0",
     })
 
     redis_client.publish("channel:out", out_hex)
-
-    upload_que.put(c1)
-    upload_que.put(c2)
-    upload_que.put(c3)
-    upload_que.put(c4)
 
     global check_list
     check_list = []
@@ -334,18 +284,10 @@ def frameHanld(tid, isFull):
 
 def random_main():
     print("开始运行 process")
-    # init_channel_url()
-    spawn(redis_subscriber)
-    spawn(upload_data)
-    # threading.Thread(target=redis_subscriber).start()
-    # threading.Thread(target=upload_data).start()
-
     ordered_frame_buffer = {"c1": None, "c2": None, "c3": None, "c4": None}
     latest_tid = 0
     while True:
-        print("---")
         # 热切换通道
-        # 找到 ordered_frame_buffer 中第一个为 None 的通道位置
         for ch in ordered_frame_buffer:
             if ordered_frame_buffer[ch] is None:
                 # 使用这个空位
@@ -355,15 +297,12 @@ def random_main():
         channelName = data["channelName"]
         tid = data["tid"]
 
-        print("=========data:", tid, channelName, data["code"])
 
         if latest_tid == 0:
             latest_tid = tid
-
         # 保证有缓存
         if channelName not in frame_cache:
             frame_cache[channelName] = data
-
         # 更新 frame_data，处理异常帧回滚
         if data["code"] != 0:
             frame_data[channelName] = frame_cache[channelName]
@@ -371,21 +310,20 @@ def random_main():
         else:
             frame_data[channelName] = data
             frame_cache[channelName] = data  # 正确帧才更新缓存
-
         # 更新按顺序等待的 buffer
         ordered_frame_buffer[channelName] = data
 
         # 如果四个通道都有了，就处理一次
         if all(ordered_frame_buffer.values()):
-            # 取最新 tid（保持统一）
+            # 取最新 tid
             tid = max(frame["tid"] for frame in ordered_frame_buffer.values())
             frameHanld(tid, isFull=True)
-
+            print("保存数据", tid)
+            upload_data()
             # 清空等待缓存，准备下一轮
             ordered_frame_buffer = {"c1": None, "c2": None, "c3": None, "c4": None}
 
         latest_tid = tid
 
-
-# if __name__ == "__main__":
-#     random_main()
+if __name__ == "__main__":
+    random_main()
