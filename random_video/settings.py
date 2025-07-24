@@ -46,18 +46,6 @@ INSTALLED_APPS += [
     "channels",
 ]
 
-ASGI_APPLICATION = "liveboard.asgi.application"
-
-# Redis 用于 channels 层通信（确保 redis 正常运行）
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("localhost", 6379)],
-        },
-    },
-}
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

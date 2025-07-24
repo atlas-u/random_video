@@ -86,21 +86,23 @@ create_table_if_not_exists()
 
 def put_frame_data(data):
     tags = {
-        "channel": "c2",
+        "video": "random",
     }
 
     key = TimeseriesKey("frame_measure", "video_source", tags)
 
     fields = {
-        "tid": data["tid"],
-        "channel": data["channel"],
-        "url": data["url"],
+        "c1": data["c1"],
+        "c2": data["c2"],
+        "c3": data["c3"],
+        "c4": data["c4"],
         "hex": data["hex"],
-        "b64": data["b64"],
-        "t1": data["t1"],
-        "t2": data["t2"],
-        "msec": data["msec"],
-        "code": data["code"],
+        "img1": data["img1"],
+        "img2": data["img2"],
+        "img3": data["img3"],
+        "img4": data["img4"],
+        "tid":  data["tid"],
+        "time": data["time"],
         "rand": data["rand"],
     }
     timestamp = int(time.time() * 1000000)
@@ -122,18 +124,20 @@ def put_frame_data(data):
 #     )
 #     return [row.primary_key + row.attribute_columns for row in query.rows]
 
-def get_latest_frames(tags,measure_name = "frame_measure", datasource = "video_source", limit=10):
-    key = TimeseriesKey(measure_name, datasource, tags)
-
-    request = GetTimeseriesDataRequest(table_name)
-    request.timeseriesKey = key
-    request.endTimeInUs = int(time.time() * 1_000_000)  # 当前时间戳（微秒）
-    request.limit = limit
-    request.fieldsToGet = {}  # 留空表示取所有字段
-
-    request.backward = True
-
+def get_latest_frames(limit = 10, measure_name ="frame_measure", datasource ="video_source"):
     try:
+        tags = {
+            "video": "random",
+        }
+        key = TimeseriesKey(measure_name, datasource, tags)
+
+        request = GetTimeseriesDataRequest(table_name)
+        request.timeseriesKey = key
+        request.endTimeInUs = int(time.time() * 1_000_000)
+        request.limit = limit
+        request.fieldsToGet = {}  # 留空表示取所有字段
+
+        request.backward = True
         response = client.get_timeseries_data(request)
         return format_timeseries_rows(response.rows)  # 已是结构化的 Point 数据
     except Exception as e:
@@ -145,15 +149,17 @@ def format_timeseries_rows(rows):
     for row in rows:
         data = row.fields
         item = {
-            "tid": data.get("tid"),
-            "channel": data.get("channel"),
-            "url": data.get("url"),
+            "c1": data.get("c1"),
+            "c2": data.get("c2"),
+            "c3": data.get("c3"),
+            "c4": data.get("c4"),
             "hex": data.get("hex"),
-            "b64": data.get("b64"),
-            "t1": data.get("t1"),
-            "t2": data.get("t2"),
-            "msec": data.get("msec"),
-            "code": data.get("code"),
+            "img1": data.get("img1"),
+            "img2": data.get("img2"),
+            "img3": data.get("img3"),
+            "img4": data.get("img4"),
+            "tid": data.get("tid"),
+            "time": data.get("time"),
             "rand": data.get("rand"),
         }
         result.append(item)

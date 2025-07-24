@@ -10,11 +10,9 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 import os
 import django
 from channels.routing import ProtocolTypeRouter, URLRouter
-from video.routing import websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'liveboard.settings')
 django.setup()
 
 application = ProtocolTypeRouter({
-    "websocket": URLRouter(websocket_urlpatterns),
 })

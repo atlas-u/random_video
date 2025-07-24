@@ -7,7 +7,13 @@
     <h2>最新直播帧</h2>
     <ul id="frame-list">
         {% for row in frames %}
-            <li>[{{ row.tid }}] HEX: {{ row.hex }} RAND: {{ row.rand }}</li>
+            <li>
+                [{{ row.tid }}] HEX: {{ row.hex }} RAND: {{ row.rand }}<br>
+                <img src="{{ row.img1 }}" alt="c1" width="200">
+                <img src="{{ row.img2 }}" alt="c2" width="200">
+                <img src="{{ row.img3 }}" alt="c3" width="200">
+                <img src="{{ row.img4 }}" alt="c4" width="200">
+            </li>
         {% endfor %}
     </ul>
 
@@ -24,7 +30,11 @@
 
             data.forEach(row => {
                 const li = document.createElement("li");
-                li.textContent = `[${row.tid}] HEX: ${row.hex} RAND: ${row.rand}`;
+                li.innerHTML = `[${row.tid}] HEX: ${row.hex} RAND: ${row.rand}<br>` +
+                               `<img src="${row.img1}" alt="c1" width="200">`+
+                                `<img src="${row.img2}" alt="c2" width="200">`+
+                                `<img src="${row.img3}" alt="c3" width="200">`+
+                                `<img src="${row.img4}" alt="c4" width="200">`;
                 frameList.appendChild(li);
             });
         } catch (e) {
@@ -35,6 +45,6 @@
     eventSource.onerror = function(err) {
         console.error("SSE 连接错误", err);
     };
-</script>
+    </script>
 </body>
 </html>
