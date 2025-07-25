@@ -2,6 +2,9 @@ import traceback
 from multiprocessing import Process
 
 from gevent import monkey
+
+from video.responseUtil import ResponseUtil
+
 monkey.patch_all()
 
 import json
@@ -9,6 +12,7 @@ from flask import Flask, render_template, Response, stream_with_context
 from video import ots_client, process
 from gevent import spawn, sleep
 from gevent.pywsgi import WSGIServer
+from flask import request, jsonify
 
 app = Flask(__name__)
 
@@ -31,7 +35,18 @@ def stream():
             sleep(2)
     return Response(stream_with_context(event_stream()), content_type='text/event-stream')
 
-from flask import request, jsonify
+
+@app.route('/list')
+def list():
+    st = request.args.get('startTime')
+    et = request.args.get('endTime')
+
+    time_range = {
+        "start_time": str(st),
+        "end_time": str(et),
+    }
+    data = ots_client.get_latest_frames(time_range=time_range)
+    return jsonify(ResponseUtil.success(data=data))
 
 
 @app.route('/verify')
@@ -47,7 +62,10 @@ def verify():
             "rand": rand_val
         }
         result = ots_client.get_one(time, filter_cond=filter_cond)
-        return jsonify(result)
+        if result != {}:
+            return jsonify(ResponseUtil.success(data=result))
+        else:
+            return jsonify(ResponseUtil.fail("校验失败，数据不存在"))
     except Exception as e:
         app.logger.error(f"接口异常: {str(e)}\n{traceback.format_exc()}")
         return jsonify({'error': '服务器内部错误'}), 500
@@ -57,7 +75,7 @@ if __name__ == '__main__':
     # spawn(process.random_main)
     p = Process(target=process.random_main)
     p.start()
-    # spawn(rrrr)
+
     http_server = WSGIServer(('', 8999), app)
-    print("✅ Flask SSE 服务已启动：http://localhost:8999")
+    print("Flask SSE 服务已启动：http://localhost:8999")
     http_server.serve_forever()

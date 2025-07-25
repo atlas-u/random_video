@@ -162,7 +162,7 @@ def get_latest_frames(limit=10, columns=None, filter_cond=None, time_range=None)
     )
 
     # 打印调试信息
-    print(f"Retrieved {len(rows)} frames. Consumed read units: {consumed.read}")
+    # print(f"Retrieved {len(rows)} frames. Consumed read units: {consumed.read}")
     data = transform_frame_data(rows)
     return data
 
@@ -189,7 +189,7 @@ def get_one(primary_key, filter_cond=None):
         max_version=1
     )
     # 打印调试信息
-    print(f"Retrieved 1 frames. Consumed read units: {consumed.read}")
+    # print(f"Retrieved 1 frames. Consumed read units: {consumed.read}")
     if row is not None:
         data = transform_frame_data([row])
         return data[0]
@@ -272,6 +272,9 @@ def format_timeseries_rows(rows):
         }
         result.append(item)
     return result
+
+
+
 
 
 if __name__ == "__main__":
